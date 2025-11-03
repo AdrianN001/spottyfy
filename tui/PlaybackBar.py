@@ -10,6 +10,7 @@ from spoti.playlist_song import PlayListSong
 class PlaybackBar(Static):
     
     completed_seconds = reactive(0)
+    isActive = reactive(True)
     duration = 0                # Sekunden (z. B. 3 Minuten)
 
     title: str
@@ -25,6 +26,8 @@ class PlaybackBar(Static):
         
         if (self.duration == 0): return "Kein Song"
 
+        
+
         TIME_LENGTH = 12
         START_LENGTH = len(self.title) + len(self.artists) + 1
 
@@ -32,9 +35,9 @@ class PlaybackBar(Static):
         
         width = self.size.width - TIME_LENGTH - 6 - START_LENGTH  # Platz für Zeit
         filled = int(width * progress)
-        bar = "█" * filled + "─" * (width - filled)
-        bar = f"[magenta]{'─'*filled}[/magenta][grey]─[/grey]"+f"{'─'*(width-filled)}"
-
+        bar = f"[magenta]{'─'*filled}[/magenta]" if self.isActive else f"[red]{'─'*filled}[/red]"  
+        bar += "[grey]─[/grey]"
+        bar += f"{'─'*(width-filled)}"
 
         minutes, seconds = divmod(int(self.completed_seconds), 60)
         total_min, total_sec = divmod(int(self.duration), 60)

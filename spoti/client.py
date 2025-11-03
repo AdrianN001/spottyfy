@@ -1,6 +1,7 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
+from lyrics.Lyric import Lyric
 from spoti.song import Song
 from spoti.playback_song import PlaybackSong
 from spoti.playlist_song import PlayListSong
@@ -10,10 +11,10 @@ from typing import Union
 class SpotifyClient:
     sp:             spotipy.Spotify
     current_song:   PlaybackSong
-
+    current_lyric:  Union[Lyric, None]
 
     def __init__(self, client_id: str, client_secret: str):
-        
+        self.current_lyric = None 
         self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
             client_id=client_id,
             client_secret= client_secret, 
@@ -29,22 +30,27 @@ class SpotifyClient:
     def fetch_current_song(self) -> Union[PlaybackSong, None]:
         raw_playback = self.sp.current_playback()
 
-        if not raw_playback or not raw_playback["is_playing"]:
+        if not raw_playback:
             return None
-        
+        if not raw_playback["item"]:
+            return None
+
         progress_ms = raw_playback["progress_ms"]
         duration_ms = raw_playback["item"]["duration_ms"]
         song_name = raw_playback["item"]["name"]
 
         progress_sec, duration_sec = progress_ms / 1000, duration_ms / 1000
         
+
         self.current_song = PlaybackSong(
                 song_name, 
                 [artist['name'] for artist in raw_playback['item']['artists']],
                 raw_playback['item']['album']['name'],
                 duration_sec,
                 raw_playback['item']['uri'],
-                progress_sec
+                progress_sec,
+                raw_playback["is_playing"],
+                progress_ms
                 )
         
         return self.current_song
@@ -86,3 +92,25 @@ class SpotifyClient:
     
     def play_song_from_playlist(self, context_uri: str, uri: str) -> None:
         self.sp.start_playback(context_uri=context_uri, offset={"uri": uri})
+
+    # lyrics
+    
+    def set_current_lyrics(self, lyric: Lyric) -> None:
+        self.current_lyric = lyric
+
+    # Musik Operations
+
+    # Skips the song
+    def skip(self) -> None:
+        self.sp.next_track()
+
+    # Skips to the previous song
+    def prev(self) -> None:
+        self.sp.previous_track()
+
+    # Stops/Starts the song
+    def toggle_playback(self) -> None:
+        if self.current_song.isPlaying:
+            self.sp.pause_playback()
+        else:
+            self.sp.start_playback()

@@ -3,3 +3,4 @@ venv
 .env
 .cache
 .DS_Store
+dev_assets
