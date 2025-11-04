@@ -1,5 +1,6 @@
 from threading import Thread
 
+from config import generate_config_directory
 from spoti import SpotifyClient
 import os
 from dotenv import load_dotenv
@@ -17,11 +18,11 @@ CLIENT_SECRET = os.environ['CLIENT_SECRET']
 
 
 def main(_args: list[str]) -> None:
+    generate_config_directory()
+
     spoti_client = SpotifyClient(CLIENT_ID, CLIENT_SECRET)
     spoti_client.fetch_current_song()    
-
     
-
 
     graphic_client = GraphicClient()
     graphic_client.attach_spotify_client(spoti_client)

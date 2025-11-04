@@ -149,7 +149,7 @@ class GraphicClient(App):
             if current_line != None:
                 self.lyric_container.update_content(f"🎵 🎶 [white]{current_line.content}[/white] 🎵 🎶" )                           
             else:
-                self.lyric_container.update_content("ERROR")
+                self.lyric_container.update_content("🎵 🎶 🎵 🎶")
 
 
 
