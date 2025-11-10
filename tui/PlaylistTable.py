@@ -55,7 +55,7 @@ class PlaylistTable(DataTable):
             self.add_row(
                     str(indx+1),
                     song.title,
-                    ",".join(song.artists[:2]),
+                    ",".join(x.name for x in song.artists[:2]),
                     song.album_name,
                     song.duration_formatted,
                     key=song.uri

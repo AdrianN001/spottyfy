@@ -1,9 +1,10 @@
+from spoti.artist import Artist
 
 
 class Song:
     
     title: str
-    artists: list[str]
+    artists: list[Artist]
 
     album_name: str
 
@@ -11,7 +12,7 @@ class Song:
 
     uri: str
 
-    def __init__(self, title: str, artists: list[str], album_name: str, duration_sec: int, uri: str) -> None:
+    def __init__(self, title: str, artists: list[Artist], album_name: str, duration_sec: int, uri: str) -> None:
         self.title = title
         self.artists = artists.copy()
         self.album_name = album_name

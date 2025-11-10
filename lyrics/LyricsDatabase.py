@@ -14,7 +14,7 @@ class LyricsDatabase:
         self.container = dict()
 
     def search_song_from_web(self, current_song: PlaybackSong) -> Union[Lyric, None]:
-        lyric = search_for_lyric(current_song.artists[0], current_song.title, current_song.uri)
+        lyric = search_for_lyric(current_song.artists[0].name, current_song.title, current_song.uri)
         if lyric != None:
             write_lyric_cache_file(lyric.to_parsable_content(), current_song.uri) 
         with self.mutex:

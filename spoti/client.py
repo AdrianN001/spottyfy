@@ -2,6 +2,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 from lyrics.Lyric import Lyric
+from spoti.artist import Artist
 from spoti.song import Song
 from spoti.playback_song import PlaybackSong
 from spoti.playlist_song import PlayListSong
@@ -44,13 +45,14 @@ class SpotifyClient:
 
         self.current_song = PlaybackSong(
                 song_name, 
-                [artist['name'] for artist in raw_playback['item']['artists']],
+                [Artist(artist) for artist in raw_playback['item']['artists']],
                 raw_playback['item']['album']['name'],
                 duration_sec,
                 raw_playback['item']['uri'],
                 progress_sec,
                 raw_playback["is_playing"],
-                progress_ms
+                progress_ms,
+                raw_playback['item']["album"]["images"][2]["url"]
                 )
         
         return self.current_song
@@ -75,7 +77,7 @@ class SpotifyClient:
                 liked_songs.append(
                         PlayListSong(
                             track['name'],
-                            [x['name'] for x in track['artists']],
+                            [Artist(x) for x in track['artists']],
                             track['album']['name'],
                             track['duration_ms'] / 1000,
                             track['uri'],
@@ -92,6 +94,21 @@ class SpotifyClient:
     
     def play_song_from_playlist(self, context_uri: str, uri: str) -> None:
         self.sp.start_playback(context_uri=context_uri, offset={"uri": uri})
+
+    def get_next_song(self):
+        data = self.sp._get("me/player/queue")
+        if not data or not data["queue"]:
+            return None
+        raw_song = data["queue"][0]  # nächster Song
+        
+        return Song(
+            raw_song["name"],
+            [Artist(x) for x in raw_song["artists"]],
+            raw_song["album"]['name'],
+            raw_song["duration_ms"] / 1000,
+            raw_song['uri']
+                )
+
 
     # lyrics
     

@@ -1,10 +1,13 @@
 import threading
 from textual.app import App, ComposeResult
+from textual.containers import Horizontal
 from textual.timer import Timer
 from textual.widgets import Footer
 from typing import Union
 from lyrics.LyricsDatabase import LyricsDatabase
 from spoti import SpotifyClient, PlaybackSong
+import spoti
+from tui.CurrentSongView import CurrentSongView
 from tui.LyricContainer import LyricContainer
 from tui.PlaylistTable import PlaylistTable
 from .PlaybackBar import PlaybackBar
@@ -18,7 +21,7 @@ class GraphicClient(App):
     }
 
     PlaylistTable {
-        width: 80%;
+        width: 60%;
         height: 90%;
         padding: 1;
         border: round #1DB954;
@@ -43,6 +46,9 @@ class GraphicClient(App):
         text-align: center;
         content-align: center middle;
         display: none;
+    }
+    CurrentSongView{
+        width:30%;
     }
     """
 
@@ -72,19 +78,27 @@ class GraphicClient(App):
         self.lyrics_db = LyricsDatabase()
 
     def compose(self) -> ComposeResult:
-        yield PlaylistTable(id="playlist_table")
+        yield Horizontal(
+            CurrentSongView(id="current_song"),
+
+            PlaylistTable(id="playlist_table")
+            )
         yield PlaybackBar(id="playback_bar")
+        
         yield Footer()
+        
         self.lyric_container = LyricContainer(id="lyric_container")
         yield self.lyric_container
 
     def on_mount(self) -> None:
-        self.playback_bar = self.query_one("#playback_bar")
-        self.playlist_table = self.query_one("#playlist_table")
+        self.playback_bar = self.query_one("#playback_bar", PlaybackBar)
+        self.playlist_table = self.query_one("#playlist_table", PlaylistTable)
 
         self.lyric_container.update_content("content")
 
         favourites = self.spotify_client.fetch_favorite_songs(50)
+        if favourites == None:
+            raise Exception("Saved cant be loadad.")
         self.playlist_table.load_new_songs(favourites, isSavedSongs=True)
         self.playlist_table.attach_spotify_client(self.spotify_client)
 
@@ -121,9 +135,18 @@ class GraphicClient(App):
             self.playback_bar.completed_seconds = 0
 
             self.start_lyrics_fetch_in_backgrnd()
+            self.update_current_song_view(current_song)
 
         else: 
             self.playback_bar.completed_seconds = current_song.progress_sec
+
+    def update_current_song_view(self, current_song: PlaybackSong) -> None:
+        curr_song_view = self.query_one("#current_song", CurrentSongView)
+        curr_song_view.update_current_song(current_song)
+        
+        next_song = self.spotify_client.get_next_song()
+        if next_song != None:
+            curr_song_view.update_next_song(next_song) 
 
     def update_lyric_container(self) -> None:
         
@@ -134,12 +157,12 @@ class GraphicClient(App):
 
             self.lyric_container.border_title = self.lyric_container.border_subtitle = "" 
         
-        elif self.spotify_client.current_lyric == None:
+        elif type(result) != str and self.spotify_client.current_lyric == None:
             self.spotify_client.set_current_lyrics(result)
         else:
                 # Update the Lyrics Bar
             self.lyric_container.border_title = f"| Now playing: {self.spotify_client.current_song.title} |"
-            self.lyric_container.border_subtitle = f"| by: {','.join(self.spotify_client.current_song.artists)} |"
+            self.lyric_container.border_subtitle = f"| by: {','.join(x.name for x in self.spotify_client.current_song.artists)} |"
 
 
             current_line = self.spotify_client.current_lyric.get_line(
