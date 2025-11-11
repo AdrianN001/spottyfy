@@ -6,7 +6,6 @@ from textual.widgets import Footer
 from typing import Union
 from lyrics.LyricsDatabase import LyricsDatabase
 from spoti import SpotifyClient, PlaybackSong
-import spoti
 from tui.CurrentSongView import CurrentSongView
 from tui.LyricContainer import LyricContainer
 from tui.PlaylistTable import PlaylistTable
@@ -136,7 +135,8 @@ class GraphicClient(App):
 
             self.start_lyrics_fetch_in_backgrnd()
             self.update_current_song_view(current_song)
-
+            
+            self.playlist_table.update_table_by_new_song(current_song.uri)
         else: 
             self.playback_bar.completed_seconds = current_song.progress_sec
 

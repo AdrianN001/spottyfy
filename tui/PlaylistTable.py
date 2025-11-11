@@ -35,6 +35,7 @@ class PlaylistTable(DataTable):
         self.clear(columns=True)
 
         self.add_columns(
+                " ",
                 "#",
                 "Titel",
                 "Artist",
@@ -53,6 +54,7 @@ class PlaylistTable(DataTable):
 
         for indx, song in enumerate(songs):    
             self.add_row(
+                    " ",
                     str(indx+1),
                     song.title,
                     ",".join(x.name for x in song.artists[:2]),
@@ -61,18 +63,34 @@ class PlaylistTable(DataTable):
                     key=song.uri
                     )
 
+    def update_table_by_new_song(self, song_uri: str) -> None:
+        coll_key = [ key for key,value in self.columns.items() if value.width == 1 and value.content_width == 1][0]
 
+        try:
+            if hasattr(self, "_current_song_uri") and self._current_song_uri is not None:
+                self.update_cell(self._current_song_uri, coll_key, " ")
+            self._current_song_uri = ""
 
+            self.update_cell(song_uri, coll_key, "▶")
 
-    async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        row_key = event.row_key
-        row_data = self.get_row(row_key)
+            self._current_song_uri = song_uri
+        except Exception:
+            return
 
-        songIndex = int(row_data[0])-1
-        songUri   = row_key.value
+    async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None: 
+        song_uri = str(event.row_key.value)  
+        row_data = self.get_row(song_uri) 
+
+        song_index = int(row_data[1]) - 1
+
         
+        if song_uri == None:
+            return
+
         if self.isSavedSong:
-            self.spotify_client.play_song_from_saved(songIndex)
+            self.spotify_client.play_song_from_saved(song_index)
         else:
-            self.spotify_client.play_song_from_playlist(self.context_uri, songUri)
+            self.spotify_client.play_song_from_playlist(self.context_uri, song_uri)
+        
+        self.update_table_by_new_song(song_uri)
 
