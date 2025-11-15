@@ -4,9 +4,12 @@ from textual.containers import Horizontal
 from textual.timer import Timer
 from textual.widgets import Footer
 from typing import Union
+from diary import diary
+from diary.diary import Diary
 from lyrics.LyricsDatabase import LyricsDatabase
 from spoti import SpotifyClient, PlaybackSong
 from tui.CurrentSongView import CurrentSongView
+from tui.DebugStats import DebugStatsWidget
 from tui.LyricContainer import LyricContainer
 from tui.PlaylistTable import PlaylistTable
 from .PlaybackBar import PlaybackBar
@@ -34,6 +37,19 @@ class GraphicClient(App):
         text-style: bold;
     }
 
+    #debug_stat_widget{
+        layer: overlay;
+        dock: top;
+        height: 25;
+        padding: 1 2;
+        border: round #dddddd;
+        background: rgba(0, 0, 0, 0.92);
+        color: #1DB954;
+        text-align: center;
+        content-align: center middle;
+        display: none;
+    }
+
     #lyric_container {
         layer: overlay;
         dock: bottom;
@@ -55,7 +71,8 @@ class GraphicClient(App):
         ("v", "toggle_playback", "Play/Pause"),
         ("n", "next_song", "Next"),
         ("b", "previous_song", "Back"),
-        ("l", "toggle_lyrics", "Toggle Lyrics")
+        ("l", "toggle_lyrics", "Toggle Lyrics"),
+        ("d", "toggle_debug", "Toggle Debug")
     ]
 
     spotify_client: SpotifyClient
@@ -69,12 +86,16 @@ class GraphicClient(App):
     lyrics_refresh_timer: Timer
 
     lyrics_db: LyricsDatabase
+
+    diary: Diary 
     
     def __init__(self):
         super().__init__()
         self.is_active = True
         self.current_playback_song = None
         self.lyrics_db = LyricsDatabase()
+
+        self.diary = Diary()
 
     def compose(self) -> ComposeResult:
         yield Horizontal(
@@ -89,20 +110,36 @@ class GraphicClient(App):
         self.lyric_container = LyricContainer(id="lyric_container")
         yield self.lyric_container
 
+        yield DebugStatsWidget(id="debug_stat_widget")
+
     def on_mount(self) -> None:
         self.playback_bar = self.query_one("#playback_bar", PlaybackBar)
         self.playlist_table = self.query_one("#playlist_table", PlaylistTable)
+        self.debug_stat_widget = self.query_one("#debug_stat_widget", DebugStatsWidget)
 
-        self.lyric_container.update_content("content")
+        self.debug_stat_widget.attach_spoti_usage_manager(
+                self.spotify_client.usage_manager
+                )
+
+        self.debug_stat_widget.attach_spoti_profile(
+                self.spotify_client.fetch_user_profile()
+                )
+        
+        self.debug_stat_widget.attach_diary(
+                self.diary
+                )
 
         favourites = self.spotify_client.fetch_favorite_songs(50)
         if favourites == None:
             raise Exception("Saved cant be loadad.")
+
         self.playlist_table.load_new_songs(favourites, isSavedSongs=True)
         self.playlist_table.attach_spotify_client(self.spotify_client)
 
         self.playback_refresh_timer = self.set_interval(2, self.update_playback_bar)
-        self.lyrics_refresh_timer = self.set_interval(0.5, self.update_lyric_container) 
+        self.lyrics_refresh_timer = self.set_interval(0.1, self.update_lyric_container) 
+
+    ## ACTIONS
 
     def action_toggle_playback(self) -> None:
         self.spotify_client.toggle_playback()
@@ -114,9 +151,13 @@ class GraphicClient(App):
         self.spotify_client.prev()
 
     def action_toggle_lyrics(self) -> None:
-        # 🟢 Toggle visibility instead of disabling
         self.lyric_container.display = not self.lyric_container.display
-    
+
+    def action_toggle_debug(self) -> None:
+        self.debug_stat_widget.display = not self.debug_stat_widget.display
+
+        self.debug_stat_widget.isActive = self.debug_stat_widget.display
+
     def update_playback_bar(self) -> None:
         current_song = self.spotify_client.fetch_current_song()
         if current_song is None:
@@ -183,6 +224,11 @@ class GraphicClient(App):
                 )
         thread.start()
 
+        self.diary.info(
+                "start_lyrics_fetch_in_backgrnd()", 
+                f"Starting lyrics fetch for {self.spotify_client.current_song.title} in a new thread.")
+
     def attach_spotify_client(self, client: SpotifyClient) -> None:
         self.spotify_client = client
+        client.attach_diary(self.diary)
   
