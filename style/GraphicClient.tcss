@@ -1,0 +1,62 @@
+
+PlaybackBar {
+    width: 100%;
+    height: 3;
+    padding: 1;
+}
+#main_container{
+  height:95%;
+}
+
+#playlist_search_container {
+    border:cyan round;
+    width: 60%;
+    height: 100%;
+    padding: 1;
+    background: #111111;
+    color: #dddddd;
+}
+
+PlaylistTable{
+  border:  #1DB954;
+  width:100%;
+  height:90%;
+}
+#search_bar{
+  border:magenta round;
+}
+
+PlaylistTable > .datatable--cursor {
+    background: #1DB954;
+    color: black;
+    text-style: bold;
+}
+
+#debug_stat_widget{
+    layer: overlay;
+    dock: top;
+    height: 25;
+    padding: 1 2;
+    border: round #dddddd;
+    background: rgba(0, 0, 0, 0.92);
+    color: #1DB954;
+    text-align: center;
+    content-align: center middle;
+    display: none;
+}
+
+#lyric_container {
+    layer: overlay;
+    dock: bottom;
+    height: 12;
+    padding: 1 2;
+    border: round #1DB954;
+    background: rgba(0, 0, 0, 0.92);
+    color: #1DB954;
+    text-align: center;
+    content-align: center middle;
+    display: none;
+}
+CurrentSongView{
+    width:30%;
+}

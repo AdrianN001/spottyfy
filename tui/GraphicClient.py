@@ -1,8 +1,9 @@
+from re import search
 import threading
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
-from textual.widgets import Footer
+from textual.widgets import Footer, Header
 from typing import Union
 from diary import diary
 from diary.diary import Diary
@@ -12,60 +13,11 @@ from tui.CurrentSongView import CurrentSongView
 from tui.DebugStats import DebugStatsWidget
 from tui.LyricContainer import LyricContainer
 from tui.PlaylistTable import PlaylistTable
+from tui.SearchBar import SearchBar
 from .PlaybackBar import PlaybackBar
 
 class GraphicClient(App):
-    CSS = """
-    PlaybackBar {
-        width: 100%;
-        height: 3;
-        padding: 1;
-    }
-
-    PlaylistTable {
-        width: 60%;
-        height: 90%;
-        padding: 1;
-        border: round #1DB954;
-        background: #111111;
-        color: #dddddd;
-    }
-
-    PlaylistTable > .datatable--cursor {
-        background: #1DB954;
-        color: black;
-        text-style: bold;
-    }
-
-    #debug_stat_widget{
-        layer: overlay;
-        dock: top;
-        height: 25;
-        padding: 1 2;
-        border: round #dddddd;
-        background: rgba(0, 0, 0, 0.92);
-        color: #1DB954;
-        text-align: center;
-        content-align: center middle;
-        display: none;
-    }
-
-    #lyric_container {
-        layer: overlay;
-        dock: bottom;
-        height: 12;
-        padding: 1 2;
-        border: round #1DB954;
-        background: rgba(0, 0, 0, 0.92);
-        color: #1DB954;
-        text-align: center;
-        content-align: center middle;
-        display: none;
-    }
-    CurrentSongView{
-        width:30%;
-    }
-    """
+    CSS_PATH="../style/GraphicClient.tcss"
 
     BINDINGS = [
         ("v", "toggle_playback", "Play/Pause"),
@@ -97,16 +49,31 @@ class GraphicClient(App):
 
         self.diary = Diary()
 
+        self.title = "spoTTYfy" 
+
     def compose(self) -> ComposeResult:
+        yield Header(
+                show_clock=True,
+                id="header",
+                )
+
+        """ MAIN """
         yield Horizontal(
             CurrentSongView(id="current_song"),
 
-            PlaylistTable(id="playlist_table")
+            Vertical(
+                PlaylistTable(id="playlist_table"),
+                SearchBar(id="search_bar"),
+                id="playlist_search_container"
+                ),
+            id="main_container"
             )
+
         yield PlaybackBar(id="playback_bar")
         
         yield Footer()
-        
+       
+        """ Overlays """
         self.lyric_container = LyricContainer(id="lyric_container")
         yield self.lyric_container
 
@@ -116,6 +83,9 @@ class GraphicClient(App):
         self.playback_bar = self.query_one("#playback_bar", PlaybackBar)
         self.playlist_table = self.query_one("#playlist_table", PlaylistTable)
         self.debug_stat_widget = self.query_one("#debug_stat_widget", DebugStatsWidget)
+        self.search_bar = self.query_one("#search_bar", SearchBar)
+
+        self.search_bar.attach_diary(self.diary)
 
         self.debug_stat_widget.attach_spoti_usage_manager(
                 self.spotify_client.usage_manager
@@ -157,6 +127,9 @@ class GraphicClient(App):
         self.debug_stat_widget.display = not self.debug_stat_widget.display
 
         self.debug_stat_widget.isActive = self.debug_stat_widget.display
+
+
+    """ Timer callback methods """
 
     def update_playback_bar(self) -> None:
         current_song = self.spotify_client.fetch_current_song()
