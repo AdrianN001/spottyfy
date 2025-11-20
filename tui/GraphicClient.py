@@ -188,12 +188,13 @@ class GraphicClient(App):
             self.lyric_container.border_subtitle = f"| by: {','.join(x.name for x in self.spotify_client.current_song.artists)} |"
 
 
-            current_line = self.spotify_client.current_lyric.get_line(
+            lyrics = self.spotify_client.current_lyric.get_line(
                                     self.spotify_client.current_song.progress_ms
                                 )
                 
-            if current_line != None:
-                self.lyric_container.update_content(f"🎵 🎶 [white]{current_line.content}[/white] 🎵 🎶" )                           
+            if lyrics != None:
+                prev_line, current_line, next_line = lyrics 
+                self.lyric_container.update_content(f"[grey]{prev_line.content}[/grey]\n🎵 🎶 [white]|>{current_line.content}<|[/white] 🎵 🎶\n[grey]{next_line.content}[/grey]" )                           
             else:
                 self.lyric_container.update_content("🎵 🎶 🎵 🎶")
 

@@ -14,14 +14,22 @@ class Lyric:
         self.lines.append(line)
     
 
-    def get_line(self, progress_ms: int) -> Union[LyricLine, None]:
+    def get_line(self, progress_ms: int) -> Union[tuple[LyricLine, LyricLine, LyricLine], None]:
         
-        for line in self.lines: 
-            start_timestamp_ms = line.start[0] * 60_000 + line.start[1]*1000 + line.start[2] * 10
-            end_timestamp_ms = line.end[0] * 60_000 + line.end[1]*1000 + line.end[2] *10 
+        main_line = prev_line = next_line = None
+
+        for indx, line in enumerate(self.lines): 
+            start_timestamp_ms = line.start[0] * 60_000 + line.start[1]*1_000 + line.start[2] * 10
+            end_timestamp_ms = line.end[0] * 60_000 + line.end[1]*1_000 + line.end[2] *10 
             
             if progress_ms > start_timestamp_ms and progress_ms < end_timestamp_ms:
-                return line 
+                main_line = line
+
+                prev_line = self.lines[indx-1] if indx-1 >= 0                   else LyricLine("", (0,0,0), (0,0,0))
+                next_line = self.lines[indx+1] if indx+1 <= len(self.lines) -1  else LyricLine("", (0,0,0), (0,0,0))
+
+                return prev_line, main_line, next_line
+
         return None
 
 

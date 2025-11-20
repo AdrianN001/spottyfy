@@ -8,9 +8,15 @@ from spoti import playlist_song
 from spoti.SearchResult import SearchResult
 from spoti.client import SpotifyClient
 from tui.PlaylistTable import PlaylistTable
+from tui.search_panel_sub_widgets.Donut import Donut
 
 class SearchResultPanel(Widget):
     DEFAULT_CSS="""
+    Donut{
+        width: 40;
+        height: 100%;
+        border: red round;
+    }
     DataTable{
         border: magenta round;
         height: 100%;
@@ -56,7 +62,6 @@ class SearchResultPanel(Widget):
         self.artist_list.clear()
         
        
-        tracks_list_width = 90
         for track in result.tracks:
             
             max_fire_str_len = 6
@@ -97,6 +102,7 @@ class SearchResultPanel(Widget):
                 ),
             Horizontal(
                 ListView(id="album_list"),
+                Donut(id="donut"),
                 id="bottom_container"
                 ),
 
@@ -107,7 +113,9 @@ class SearchResultPanel(Widget):
         self.track_list = self.query_one("#tracks_list", DataTable)
         self.playlist_list = self.query_one("#playlist_list", DataTable)
         self.artist_list = self.query_one("#artist_list", ListView)
+        self.donut = self.query_one("#donut", Donut)
             
+        self.donut.border_title = "|> A rotating donut:"
         self.track_list.border_title = "|>Tracks:"
         self.playlist_list.border_title = "|> Playlists:"
         self.artist_list.border_title = "|> Artists:"
