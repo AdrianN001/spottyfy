@@ -8,6 +8,16 @@ PlaybackBar {
   height:95%;
 }
 
+SearchResultPanel{
+  layer:overlay;
+  dock: top;
+  height: 95%;
+  width: 100%;
+  border: grey;
+
+  display: none;
+}
+
 #playlist_search_container {
     border:cyan round;
     width: 60%;
@@ -24,6 +34,7 @@ PlaylistTable{
 }
 #search_bar{
   border:magenta round;
+  height:10%;
 }
 
 PlaylistTable > .datatable--cursor {

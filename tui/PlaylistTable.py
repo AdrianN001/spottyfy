@@ -2,6 +2,7 @@
 
 from textual.widgets import DataTable, Static
 
+from spoti.Playlist import Playlist
 from spoti.client import SpotifyClient
 from spoti.playlist_song import PlayListSong
 
@@ -45,7 +46,10 @@ class PlaylistTable(DataTable):
 
     def load_new_songs(self, songs: list[PlayListSong], context_uri: str = "", isSavedSongs: bool = True) -> None: 
         self.clear()
-
+    
+        self.playlist = None
+        self.border_title = "| Saved Songs |"
+    
         if context_uri == "" and isSavedSongs == False:
             return None
 
@@ -62,6 +66,33 @@ class PlaylistTable(DataTable):
                     song.duration_formatted,
                     key=song.uri
                     )
+
+    def load_playlist(self, playlist: Playlist) -> None:
+        self.clear()
+
+        self.playlist = playlist
+        self.isSavedSong = False
+
+        self.border_title = f"| {playlist.name} |"
+
+        for indx, song in enumerate(playlist.tracks):   
+            try:
+                self.add_row(
+                    " ",
+                    str(indx+1),
+                    song.title,
+                    ",".join(x.name for x in song.artists[:2]),
+                    song.album_name,
+                    song.duration_formatted,
+                    key=song.uri
+                    )
+            except Exception:
+                # Duplicate
+                continue
+        
+        self.focus()
+
+
 
     def update_table_by_new_song(self, song_uri: str) -> None:
         coll_key = [ key for key,value in self.columns.items() if value.width == 1 and value.content_width == 1][0]
@@ -89,8 +120,8 @@ class PlaylistTable(DataTable):
 
         if self.isSavedSong:
             self.spotify_client.play_song_from_saved(song_index)
-        else:
-            self.spotify_client.play_song_from_playlist(self.context_uri, song_uri)
+        elif self.playlist != None:
+            self.spotify_client.play_song_from_playlist(self.playlist.playlist_id, song_uri)
         
         self.update_table_by_new_song(song_uri)
 

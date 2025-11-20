@@ -1,8 +1,11 @@
+from functools import lru_cache
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 from diary.diary import Diary
 from lyrics.Lyric import Lyric
+from spoti.Playlist import Playlist
+from spoti.SearchResult import SearchResult
 from spoti.artist import Artist
 from spoti.profile import Profile
 from spoti.song import Song
@@ -10,7 +13,7 @@ from spoti.playback_song import PlaybackSong
 from spoti.playlist_song import PlayListSong
 from spoti.usage import SpotifyUsageOverwatch
 
-from typing import Union
+from typing import Iterable, Union
 
 class SpotifyClient:
     SCOPE="user-modify-playback-state user-read-private user-library-read user-read-playback-state user-read-email"
@@ -122,6 +125,18 @@ class SpotifyClient:
         self.diary.info("fetch_favorite_songs()", "Successfully fetched the saved songs.")
         return liked_songs
 
+    def fetch_playlist(self, playlist_id: str) -> Union[Playlist, None]:
+        raw_response = self.sp.playlist(playlist_id)
+        self.usage_manager.add_to_usage()
+        if raw_response == None:
+            self.diary.warning("fetch_playlist()", "Unsuccessful playlist fetch")
+            return None
+        self.diary.info("fetch_playlist()", "Successfully fetched a playlist.")
+
+        playlist = Playlist(raw_response)
+        return playlist
+
+
     def play_song_from_saved(self, position: int) -> None:
         self.sp.start_playback(context_uri="spotify:collection", offset={"position": position})
         self.usage_manager.add_to_usage()
@@ -151,6 +166,22 @@ class SpotifyClient:
             raw_song['uri']
                 )
 
+    @lru_cache()
+    def search_with_query(self, q: str, type_of_search: Iterable[str]) -> Union[SearchResult, None]:
+        raw_search_result = self.sp.search(
+                q, 
+                limit=20,
+                type = "track,playlist"
+                )
+        self.diary.info("search_with_query()", "Search ended in spotify client.")
+        self.usage_manager.add_to_usage()
+
+        if raw_search_result == None: 
+            return None
+        
+        formatted_search_result = SearchResult(q, raw_search_result)
+        
+        return formatted_search_result
 
     # lyrics
     
@@ -182,3 +213,7 @@ class SpotifyClient:
 
         self.usage_manager.add_to_usage()
 
+    
+    def start_song(self, song_uri: str) -> None:
+        self.sp.start_playback(uris=[song_uri])
+        self.usage_manager.add_to_usage()

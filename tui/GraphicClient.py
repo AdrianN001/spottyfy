@@ -5,7 +5,6 @@ from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
 from textual.widgets import Footer, Header
 from typing import Union
-from diary import diary
 from diary.diary import Diary
 from lyrics.LyricsDatabase import LyricsDatabase
 from spoti import SpotifyClient, PlaybackSong
@@ -14,6 +13,7 @@ from tui.DebugStats import DebugStatsWidget
 from tui.LyricContainer import LyricContainer
 from tui.PlaylistTable import PlaylistTable
 from tui.SearchBar import SearchBar
+from tui.SearchResultPanel import SearchResultPanel
 from .PlaybackBar import PlaybackBar
 
 class GraphicClient(App):
@@ -74,6 +74,8 @@ class GraphicClient(App):
         yield Footer()
        
         """ Overlays """
+        yield SearchResultPanel(id="search_result_panel")
+        
         self.lyric_container = LyricContainer(id="lyric_container")
         yield self.lyric_container
 
@@ -84,8 +86,15 @@ class GraphicClient(App):
         self.playlist_table = self.query_one("#playlist_table", PlaylistTable)
         self.debug_stat_widget = self.query_one("#debug_stat_widget", DebugStatsWidget)
         self.search_bar = self.query_one("#search_bar", SearchBar)
+        self.search_result_panel = self.query_one("#search_result_panel", SearchResultPanel)
 
+        self.search_bar.attach_spotify_client(self.spotify_client)
         self.search_bar.attach_diary(self.diary)
+        self.search_result_panel.attach_diary(self.diary)
+        self.search_result_panel.attach_spotify_client(self.spotify_client)
+
+        self.search_result_panel.attach_playlist_table(self.playlist_table)
+        self.search_bar.attach_result_panel(self.search_result_panel)
 
         self.debug_stat_widget.attach_spoti_usage_manager(
                 self.spotify_client.usage_manager
