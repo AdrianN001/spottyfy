@@ -18,6 +18,10 @@ SearchResultPanel{
   display: none;
 }
 
+OwnPlaylistWidget{
+  border: magenta round;
+}
+
 #playlist_search_container {
     border:cyan round;
     width: 60%;

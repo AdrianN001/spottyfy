@@ -94,12 +94,11 @@ class DebugStatsWidget(Widget):
 
     def update_spotify_profile(self, profile: Profile) -> None:
         formatted_text = \
-                f"""
-Logged in as: [#ffffff bold]{profile.display_name}[/#ffffff bold] ({profile.email}) from {profile.country}
+                f"""Logged in as: 
+[#ffffff bold]{profile.display_name}[/#ffffff bold] ({profile.email}) from {profile.country}
 
 [#ffffff bold]URI[/#ffffff bold]: {profile.uri}
 [#ffffff bold]Subscription Level[/#ffffff bold]: {profile.subscription_level}
-
 
 [#ffffff bold]Scopes Allowed[/#ffffff bold]: {profile.scope}
                 """

@@ -36,6 +36,10 @@ class LyricsDatabase:
             return parsed_lyric
 
     def fetch_in_background(self, current_song: PlaybackSong) -> None:
+        with self.mutex:
+            if current_song.uri in self.container:
+                return
+
         disk_result = self.search_song_from_disk(current_song)
         
         if disk_result == None:

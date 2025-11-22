@@ -16,7 +16,7 @@ from spoti.usage import SpotifyUsageOverwatch
 from typing import Iterable, Union
 
 class SpotifyClient:
-    SCOPE="user-modify-playback-state user-read-private user-library-read user-read-playback-state user-read-email"
+    SCOPE="user-modify-playback-state user-read-private user-library-read user-read-playback-state user-read-email playlist-read-private"
 
     sp:             spotipy.Spotify
     current_song:   PlaybackSong
@@ -136,6 +136,17 @@ class SpotifyClient:
         playlist = Playlist(raw_response)
         return playlist
 
+
+    def fetch_user_playlist(self) -> Union[list[Playlist], None]: 
+        raw_response = self.sp.current_user_playlists()
+        self.usage_manager.add_to_usage()
+
+        if raw_response == None:
+            self.diary.error("fetch_user_playlist()", "Unsuccessful playlist fetch")
+            return None
+        self.diary.info("fetch_user_playlist()", "Successfully fetched the playlists of the user.")
+        
+        return [Playlist(raw_playlist) for raw_playlist in raw_response["items"]]
 
     def play_song_from_saved(self, position: int) -> None:
         self.sp.start_playback(context_uri="spotify:collection", offset={"position": position})

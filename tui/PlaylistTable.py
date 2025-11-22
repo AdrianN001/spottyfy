@@ -34,15 +34,13 @@ class PlaylistTable(DataTable):
 
     def setup_collums(self) -> None:
         self.clear(columns=True)
-
-        self.add_columns(
-                " ",
-                "#",
-                "Titel",
-                "Artist",
-                "Album",
-                "Length"
-                )
+        
+        self.add_column(" ", key="pointer_col", width=1)
+        self.add_column("#", key="index_col", width=2)
+        self.add_column("Titel", key="titel_col", width=30)
+        self.add_column("Artist", key="artist_col", width=25)
+        self.add_column("Album", key="album_col", width=25)
+        self.add_column("Length", key="length_col", width=10)
 
     def load_new_songs(self, songs: list[PlayListSong], context_uri: str = "", isSavedSongs: bool = True) -> None: 
         self.clear()

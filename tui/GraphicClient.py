@@ -11,6 +11,7 @@ from spoti import SpotifyClient, PlaybackSong
 from tui.CurrentSongView import CurrentSongView
 from tui.DebugStats import DebugStatsWidget
 from tui.LyricContainer import LyricContainer
+from tui.OwnPlaylistWidget import OwnPlaylistWidget
 from tui.PlaylistTable import PlaylistTable
 from tui.SearchBar import SearchBar
 from tui.SearchResultPanel import SearchResultPanel
@@ -66,6 +67,8 @@ class GraphicClient(App):
                 SearchBar(id="search_bar"),
                 id="playlist_search_container"
                 ),
+
+            OwnPlaylistWidget(id="own_playlist_widget"),
             id="main_container"
             )
 
@@ -87,6 +90,7 @@ class GraphicClient(App):
         self.debug_stat_widget = self.query_one("#debug_stat_widget", DebugStatsWidget)
         self.search_bar = self.query_one("#search_bar", SearchBar)
         self.search_result_panel = self.query_one("#search_result_panel", SearchResultPanel)
+        self.own_playlist_widget = self.query_one("#own_playlist_widget", OwnPlaylistWidget)
 
         self.search_bar.attach_spotify_client(self.spotify_client)
         self.search_bar.attach_diary(self.diary)
@@ -107,6 +111,12 @@ class GraphicClient(App):
         self.debug_stat_widget.attach_diary(
                 self.diary
                 )
+
+        self.own_playlist_widget.attach_diary(self.diary)
+        self.own_playlist_widget.attach_spotify_client(self.spotify_client)
+        self.own_playlist_widget.attach_playlist_table(self.playlist_table)
+
+        self.own_playlist_widget.load_playlist()
 
         favourites = self.spotify_client.fetch_favorite_songs(50)
         if favourites == None:

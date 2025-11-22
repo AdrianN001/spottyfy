@@ -19,7 +19,6 @@ class PlaybackBar(Static):
     def set_new_song(self, new_song: PlaybackSong) -> None:
         self.duration = new_song.duration_sec
         self.title = new_song.title
-        x = new_song
         self.artists = ",".join(x.name for x in new_song.artists[:2])
 
     def render(self) -> str:
