@@ -77,9 +77,10 @@ class DebugStatsWidget(Widget):
         raw_data = fetch_usage_data_from_scrape()
         max_monthly_request = raw_data["MaxMonthlyRequest"]
         remaining_montly_request = raw_data["RemainingMonthlyRequest"]
-
+        
+        
         new_output = \
-                f"[bold #ffffff]Remaining Requests[/bold #ffffff]: {remaining_montly_request}/{max_monthly_request} [red]({int(100-(remaining_montly_request)/(max_monthly_request)*100)}% used)[/red]"
+                f"[bold #ffffff]Remaining Requests[/bold #ffffff]: {remaining_montly_request}/{max_monthly_request} [red]({int(100-(remaining_montly_request)/(max_monthly_request)*100)}% used)[/red]" if raw_data["IsActive"] else "[bold #ff1132]Inactive account![/bold #ff1132]"
         
         self.scrape_usage_static.update(new_output)
         self.refresh()
