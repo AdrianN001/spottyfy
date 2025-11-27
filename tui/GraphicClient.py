@@ -8,6 +8,7 @@ from typing import Union
 from diary.diary import Diary
 from lyrics.LyricsDatabase import LyricsDatabase
 from spoti import SpotifyClient, PlaybackSong
+from spoti.InputQueue import InputQueue
 from tui.CurrentSongView import CurrentSongView
 from tui.DebugStats import DebugStatsWidget
 from tui.LyricContainer import LyricContainer
@@ -25,7 +26,10 @@ class GraphicClient(App):
         ("n", "next_song", "Next"),
         ("b", "previous_song", "Back"),
         ("l", "toggle_lyrics", "Toggle Lyrics"),
-        ("d", "toggle_debug", "Toggle Debug")
+        ("d", "toggle_debug", "Toggle Debug"),
+
+        ("c", "jump_forward", "Jump forward"),
+        ("x", "jump_backward", "Jump backward")
     ]
 
     spotify_client: SpotifyClient
@@ -47,6 +51,8 @@ class GraphicClient(App):
         self.is_active = True
         self.current_playback_song = None
         self.lyrics_db = LyricsDatabase()
+
+        self.ff_queue = InputQueue(2, 0.4)
 
         self.diary = Diary()
 
@@ -100,6 +106,8 @@ class GraphicClient(App):
         self.search_result_panel.attach_playlist_table(self.playlist_table)
         self.search_bar.attach_result_panel(self.search_result_panel)
 
+        self.playlist_table.attach_diary(self.diary)
+
         self.debug_stat_widget.attach_spoti_usage_manager(
                 self.spotify_client.usage_manager
                 )
@@ -111,6 +119,8 @@ class GraphicClient(App):
         self.debug_stat_widget.attach_diary(
                 self.diary
                 )
+
+        self.search_bar.attach_playlist_table(self.playlist_table)
 
         self.own_playlist_widget.attach_diary(self.diary)
         self.own_playlist_widget.attach_spotify_client(self.spotify_client)
@@ -126,7 +136,8 @@ class GraphicClient(App):
         self.playlist_table.attach_spotify_client(self.spotify_client)
 
         self.playback_refresh_timer = self.set_interval(2, self.update_playback_bar)
-        self.lyrics_refresh_timer = self.set_interval(0.1, self.update_lyric_container) 
+        self.lyrics_refresh_timer = self.set_interval(0.1, self.update_lyric_container)
+        self.ff_queue_tick_timer = self.set_interval(0.4, self.ff_queue_tick)
 
     ## ACTIONS
 
@@ -147,6 +158,11 @@ class GraphicClient(App):
 
         self.debug_stat_widget.isActive = self.debug_stat_widget.display
 
+    def action_jump_forward(self) -> None:
+        self.ff_queue.add_input(1)
+
+    def action_jump_backward(self) -> None:
+        self.ff_queue.add_input(-1)
 
     """ Timer callback methods """
 
@@ -208,6 +224,18 @@ class GraphicClient(App):
             else:
                 self.lyric_container.update_content("🎵 🎶 🎵 🎶")
 
+
+    def ff_queue_tick(self) -> None:
+        output = self.ff_queue.tick()
+        if output == None:
+            return
+        
+        
+        self.diary.info("ff_queue_tick()", f"{output=}")
+        if output < 0:
+            self.spotify_client.jump_backward(-output)
+        else:
+            self.spotify_client.jump_forward(output)
 
 
     def start_lyrics_fetch_in_backgrnd(self) -> None:

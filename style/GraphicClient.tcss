@@ -11,7 +11,7 @@ PlaybackBar {
 SearchResultPanel{
   layer:overlay;
   dock: top;
-  height: 95%;
+  height: 98%;
   width: 100%;
   border: grey;
 
@@ -25,7 +25,7 @@ OwnPlaylistWidget{
 #playlist_search_container {
     border:cyan round;
     width: 60%;
-    height: 100%;
+    height: 90%;
     padding: 1;
     background: #111111;
     color: #dddddd;
@@ -34,11 +34,11 @@ OwnPlaylistWidget{
 PlaylistTable{
   border:  #1DB954;
   width:100%;
-  height:90%;
+  height:92%;
 }
 #search_bar{
   border:magenta round;
-  height:10%;
+  height:8%;
 }
 
 PlaylistTable > .datatable--cursor {

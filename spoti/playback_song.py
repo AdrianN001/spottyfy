@@ -9,6 +9,7 @@ class PlaybackSong(Song):
 
     progress_ms: int
     album_image_url: str
+    
 
     def __init__(self, title: str, 
                  artists: list[Artist], 

@@ -2,6 +2,7 @@
 
 from textual.widgets import DataTable, Static
 
+from diary.diary import Diary
 from spoti.Playlist import Playlist
 from spoti.client import SpotifyClient
 from spoti.playlist_song import PlayListSong
@@ -9,6 +10,9 @@ from spoti.playlist_song import PlayListSong
 
 
 class PlaylistTable(DataTable):
+
+    savedSongs: list[PlayListSong]
+    playlist:   Playlist
 
     spotify_client: SpotifyClient
     context_uri:    str
@@ -32,6 +36,9 @@ class PlaylistTable(DataTable):
     def attach_spotify_client(self, spoti_client: SpotifyClient) -> None:
         self.spotify_client = spoti_client
 
+    def attach_diary(self, diary: Diary) -> None:
+        self.diary = diary
+
     def setup_collums(self) -> None:
         self.clear(columns=True)
         
@@ -44,7 +51,8 @@ class PlaylistTable(DataTable):
 
     def load_new_songs(self, songs: list[PlayListSong], context_uri: str = "", isSavedSongs: bool = True) -> None: 
         self.clear()
-    
+   
+        self.savedSongs = songs
         self.playlist = None
         self.border_title = "| Saved Songs |"
     
@@ -90,6 +98,77 @@ class PlaylistTable(DataTable):
         
         self.focus()
 
+
+    def search_from_playlist(self, query: str) -> None:
+        self.clear()
+
+        prev_border_title = self.border_title.replace("|","")
+        
+        if "Searching" in prev_border_title:
+            prev_border_title = prev_border_title.split("Searching")[0]
+        
+        prev_border_title = prev_border_title.strip()
+
+        new_border_title = "| " + prev_border_title + f" [#aaaaaa] Searching: {query} [/#aaaaaa]" + " |"
+        
+        self.border_title = new_border_title
+        
+        indx = 0
+        for song in self.savedSongs if self.isSavedSong else self.playlist.tracks:
+            self.diary.info("search_from_playlist()", f"{song.title.lower()=} {query.lower()=}")
+
+            self.diary.info("search_from_playlist()", f"{song.album_name.lower()=} {query.lower()=}")
+            
+            if query.lower() not in song.title.lower() \
+                    and query.lower() not in song.album_name.lower() \
+                    and not any(query.lower() in artist.name.lower() for artist in song.artists): 
+                        continue
+
+            try:
+                self.add_row(
+                    " ",
+                    str(indx+1),
+                    song.title,
+                    ",".join(x.name for x in song.artists[:2]),
+                    song.album_name,
+                    song.duration_formatted,
+                    key=song.uri
+                    )
+                indx += 1
+            except Exception:
+                # duplicate
+                continue
+        self.focus()
+
+
+
+
+    def clear_search(self) -> None:
+        self.clear()
+
+        prev_border_title = self.border_title.replace("|","")
+        
+        if "Searching" in prev_border_title:
+            prev_border_title = prev_border_title.split("Searching")[0]
+        
+        self.border_title = prev_border_title.strip()
+
+        
+        for indx, song in enumerate(self.savedSongs if self.isSavedSong else self.playlist.tracks):    
+            try:
+                self.add_row(
+                    " ",
+                    str(indx+1),
+                    song.title,
+                    ",".join(x.name for x in song.artists[:2]),
+                    song.album_name,
+                    song.duration_formatted,
+                    key=song.uri
+                    )
+            except exception:
+                # duplicate
+                continue
+        self.focus()
 
 
     def update_table_by_new_song(self, song_uri: str) -> None:

@@ -158,6 +158,40 @@ class SpotifyClient:
         self.usage_manager.add_to_usage()
         self.diary.info("play_song_from_playlist()", "New song was played, with URI: {uri}")
 
+
+    def jump_forward(self, seconds: int) -> None:
+        self.usage_manager.add_to_usage()
+        
+        progress_second = self.current_song.progress_sec
+        duration_second = self.current_song.duration_sec
+
+        seeked_ms = (progress_second + seconds) * 1000
+        seeked_ms = min(seeked_ms, (duration_second*1000) )
+       
+        seeked_ms = int(seeked_ms)
+        self.diary.info("jump_forward()", f"{progress_second=} {seeked_ms=}")
+
+        try:
+            self.sp.seek_track(seeked_ms)
+        except:
+            self.diary.error("jump_forward()", "Couldnt skip forward.")
+    
+    def jump_backward(self, seconds: int) -> None:
+        self.usage_manager.add_to_usage()
+        
+        progress_second = self.current_song.progress_sec
+
+        seeked_ms = (progress_second - seconds) * 1000
+        seeked_ms = max(seeked_ms, 0)
+
+        seeked_ms = int(seeked_ms)
+        try:
+            self.sp.seek_track(position_ms=seeked_ms)
+        except:
+            self.diary.error("jump_backward()", "Couldnt jump back.")
+    
+
+
     def get_next_song(self):
         data = self.sp._get("me/player/queue")
         self.usage_manager.add_to_usage()
