@@ -1,6 +1,7 @@
 
 # spottyfy
-A spotify client in the terminal, made by Python. 
+A spotify client in the terminal, made with Python. 
+![screenshot](https://github.com/AdrianN001/spottyfy/blob/main/.github/images/screenshot2.png?raw=true)
 ## 🚀 Features
 - active lyrics sync
 ## 🔧 Installation
